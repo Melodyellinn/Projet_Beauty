@@ -1,0 +1,10 @@
+/.ipynb_checkpoints
+/data
+/archive_data
+/mlruns
+/outputs
+/tmp_data
+Application_prod.db
+confusion_matrix.png
+data_information.png
+lc.png
