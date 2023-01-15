@@ -1,9 +1,9 @@
+
 import pandas as pd
 from sklearn.preprocessing import LabelEncoder
 import mlflow
 import sqlite3 as sql
 from datetime import timedelta, datetime
-
 
 conn = sql.connect('Application_prod.db')
 
@@ -12,44 +12,40 @@ data = pd.read_sql("""SELECT *
 
 data["date"] = pd.to_datetime(data["date"])
 date = "20221001"
-#today_date  = datetime.today()
+today_date  = datetime.today()
 
-today_date = datetime.strptime(date,"%Y%m%d")
+#today_date = datetime.strptime(date,"%Y%m%d")
 last_date = today_date - timedelta(days=7)
 focus_data = data.copy()[data['date'].between(last_date,today_date)]
-
 print("---------------------------------------------------------------------------------")
 
-df = focus_data.set_index('fullVisitorId')
-df = df.copy()[df["country"].isin(["United States", "France", 
-                                                "India", "China", "Germany",
-                                                "Canada", "(not set)"])]
+df = focus_data.set_index('fullVisitorId').drop(["country",'medium','date',"index","bounces"],axis=1)
 #change categorial columns
-categorial = df[['channelGrouping','deviceCategory', 'country']]
+
+categorial = df[['channelGrouping','deviceCategory']]
 
 for i in categorial.columns:
     df[i]= LabelEncoder().fit_transform(df[i])
     df[i].unique()
     
-df = df.drop(['medium','date',"index"], axis= 1)
 df = df.dropna(axis=0)
 
 print("---------------------------------------------------------------------------------")
 
-logged_model = 'runs:/1489eb854fb249f388e3404ab0b9fef4/model_xgboost'
+logged_model = 'runs:/60cfa1a830df457eb19b304db7987927/model_xgboost'
 # Load model as a PyFuncModel.
-loaded_model = mlflow.pyfunc.load_model(logged_model)
+loaded_model = mlflow.xgboost.load_model(logged_model)
 # Predict on a Pandas DataFrame.
-result = loaded_model.predict(pd.DataFrame(df))
+result = loaded_model.predict(df)
+result_proba = loaded_model.predict_proba(df)[:,1]
 
 print("---------------------------------------------------------------------------------")
 
-data_result = focus_data.copy()[focus_data.country.isin(["United States", "France", 
-                                                "India", "China", "Germany",
-                                                "Canada", "(not set)"])].dropna()
+data_result = focus_data.copy().dropna(axis=0)
 data_result['Predict'] = result
+data_result['Predict_proba']= result_proba
 
-result_to_save = data_result[["index","fullVisitorId","date","Predict"]]
+result_to_save = data_result[["index","fullVisitorId","date","Predict","Predict_proba"]]
 
 
 print("---------------------------------------------------------------------------------")
@@ -78,4 +74,4 @@ try:
 except:
     print("first Run of infering creating table")
     
-    result_to_save.to_sql("Result_data",conn, if_exists ="append",index=False)
+    result_to_save.to_sql("Result_data",conn, if_exists ="replace",index=False)

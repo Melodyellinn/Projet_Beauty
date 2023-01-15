@@ -4,7 +4,12 @@
 /mlruns
 /outputs
 /tmp_data
+/model_xgboos_1
+/model_xgboos_1.booster
 Application_prod.db
 confusion_matrix.png
 data_information.png
 lc.png
+feature_importance.png
+Threshold_moving.png
+Precision_recall_trade_off.csv
