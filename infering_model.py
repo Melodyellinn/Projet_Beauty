@@ -5,21 +5,21 @@ import mlflow
 import sqlite3 as sql
 from datetime import timedelta, datetime
 
-conn = sql.connect('Application_prod.db')
+conn = sql.connect('C:/Users/Simplon/Desktop/PROJET_FINAL_BEAUTY/App_Beauty_E1/Application_prod.db')
 
 data = pd.read_sql("""SELECT * 
                       FROM Raw_data""", conn)
 
 data["date"] = pd.to_datetime(data["date"])
-date = "20221001"
-today_date  = datetime.today()
+date = "20230131"
+#today_date  = datetime.today()
 
-#today_date = datetime.strptime(date,"%Y%m%d")
-last_date = today_date - timedelta(days=7)
+today_date = datetime.strptime(date,"%Y%m%d")
+last_date = today_date - timedelta(days=32)
 focus_data = data.copy()[data['date'].between(last_date,today_date)]
 print("---------------------------------------------------------------------------------")
 
-df = focus_data.set_index('fullVisitorId').drop(["country",'medium','date',"index","bounces"],axis=1)
+df = focus_data.set_index('fullVisitorId').drop(["country",'medium','date',"index","bounces",""],axis=1)
 #change categorial columns
 
 categorial = df[['channelGrouping','deviceCategory']]
